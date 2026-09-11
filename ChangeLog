@@ -1,4 +1,6 @@
 0.1.0
+Fixed .desktop file.
+Fixed main icon.
 Save/Restore window geometry.
 Added 'about'.
 Added 'sticky'.
