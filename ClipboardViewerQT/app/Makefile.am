@@ -8,9 +8,6 @@ clipboardviewerqt_SOURCES = $(COMMONSRC)
 pixfilesdir = $(pkgdatadir)/pixmaps
 pixfiles_DATA = ../resources/pixmaps/*
 
-scriptfilesdir = $(pkgdatadir)/scripts
-scriptfiles_SCRIPTS = ../resources/scripts/README
-
 bin_PROGRAMS = clipboardviewerqt
 
 man1_MANS = ../resources/man/clipboardviewerqt.1

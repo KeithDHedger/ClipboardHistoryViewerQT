@@ -56,3 +56,5 @@ AUTHORS
 NEWS
 config.h
 sources
+ClipboardViewerQT/app/clipboardviewerqt
+*.o

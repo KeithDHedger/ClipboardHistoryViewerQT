@@ -22,7 +22,7 @@
 #define _GLOBALS_
 
 #include <QApplication>
-#include <QWidget>
+#include <QtWidgets>
 
 #define MAXCLIPMENULEN 48
 #define MAXCLIPS 32
