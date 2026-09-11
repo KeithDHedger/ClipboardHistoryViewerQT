@@ -1,0 +1,16 @@
+
+AM_CPPFLAGS =	-I$(top_srcdir) \
+			$(QTCORE_CFLAGS) \
+			$(QTWIDGETS_CFLAGS) \
+			$(QTPRINTSUPPORT_CFLAGS) \
+			-DPREFIX=\""${prefix}\"" \
+			-DDATADIR=\""${pkgdatadir}"\" \
+			-DSYSCONFDIR=\""${sysconfdir}/${PACKAGE}"\" \
+			-DLIBDIR=\""${libdir}/${PACKAGE}"\" \
+			-fPIC
+
+
+LIBS =	$(QTCORE_LIBS) \
+		$(QTWIDGETS_LIBS) \
+		$(QTPRINTSUPPORT_LIBS)
+
