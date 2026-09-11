@@ -154,6 +154,7 @@ void ClipboardClass::buildMainGui(void)
 			about.showLicenceButton(true);
 			about.showCreditsButton(true);
 			about.runAbout();
+			//this->mainWindow->activateWindow();
 		});
 	hlayout->addWidget(about);
 
