@@ -1,8 +1,8 @@
 /*
  *
- * ©K. D. Hedger. Fri 11 Sep 11:26:33 BST 2026 keithdhedger@gmail.com
+ * ©K. D. Hedger. Fri 11 Sep 11:38:51 BST 2026 keithdhedger@gmail.com
 
- * This file (main.cpp) is part of ClipboardViewerQT.
+ * This file (ClipboardClass.h) is part of ClipboardViewerQT.
 
  * ClipboardViewerQT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,35 @@
  * along with ClipboardViewerQT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef _CLIPBOARDCLASS_
+#define _CLIPBOARDCLASS_
+
 #include "globals.h"
 
-int main(int argv, char **args)
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+
+#define MAXCLIPMENULEN 48
+#define MAXCLIPS 32
+
+class ClipboardClass
 {
-	QApplication		app(argv, args);
-	ClipboardClass	cc;
+	public:
+		ClipboardClass();
+		~ClipboardClass();
 
-	app.setApplicationName(PACKAGE_NAME);
-	app.setApplicationVersion(PACKAGE_VERSION);
 
-	return app.exec();
-}
+	private:
+		QMainWindow		*mainWindow=NULL;
+		QTextEdit		*te=NULL;
+		QClipboard		*mainClip=NULL;
+		QComboBox		*clips=NULL;
+		int				imageCnt=1;
+		Display			*display=NULL;
+
+		void				buildMainGui(void);
+		void				setWindowProps(Display *display,Window window,const char* grp,const char *type_name,int what);
+
+};
+
+#endif

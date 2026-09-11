@@ -24,7 +24,9 @@
 #include <QApplication>
 #include <QtWidgets>
 
-#define MAXCLIPMENULEN 48
-#define MAXCLIPS 32
+#include "config.h"
+
+#include "ClipboardClass.h"
+#include "QT_AboutBox.h"
 
 #endif

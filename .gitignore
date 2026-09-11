@@ -58,3 +58,6 @@ config.h
 sources
 ClipboardViewerQT/app/clipboardviewerqt
 *.o
+ignorelibleaks
+runwithval
+*~

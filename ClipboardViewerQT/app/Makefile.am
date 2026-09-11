@@ -8,6 +8,9 @@ clipboardviewerqt_SOURCES = $(COMMONSRC)
 pixfilesdir = $(pkgdatadir)/pixmaps
 pixfiles_DATA = ../resources/pixmaps/*
 
+docfilesdir = $(pkgdatadir)/docs
+docfiles_DATA = ../resources/docs/*
+
 bin_PROGRAMS = clipboardviewerqt
 
 man1_MANS = ../resources/man/clipboardviewerqt.1
@@ -19,5 +22,5 @@ install-exec-hook:
 uninstall-hook:
 	rm -f $(DESTDIR)${prefix}/share/applications/ClipboardViewerQT.desktop
 	rm -f $(DESTDIR)${prefix}/share/pixmaps/ClipboardViewerQT.png
-	rm -fr $(pkgdatadir)
+	rm -fr $(DESTDIR)$(pkgdatadir)
 

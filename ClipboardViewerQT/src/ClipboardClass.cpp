@@ -1,0 +1,181 @@
+/*
+ *
+ * ©K. D. Hedger. Fri 11 Sep 11:38:51 BST 2026 keithdhedger@gmail.com
+
+ * This file (ClipboardClass.cpp) is part of ClipboardViewerQT.
+
+ * ClipboardViewerQT is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * ClipboardViewerQT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with ClipboardViewerQT.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "ClipboardClass.h"
+
+ClipboardClass::~ClipboardClass()
+{
+	QSettings	prefs("KDHedger",PACKAGE_NAME);
+	prefs.setValue("geometry",mainWindow->saveGeometry());
+	delete this->mainWindow;
+	XCloseDisplay(this->display);
+}
+
+ClipboardClass::ClipboardClass()
+{
+ 	this->display=XOpenDisplay(NULL);
+	if(this->display==NULL)
+		{
+			fprintf(stderr,"Can't open display exiting ...");
+			exit(1);
+		}
+
+	this->mainClip=qApp->clipboard();
+	QObject::connect(this->mainClip,&QClipboard::dataChanged,[this]()
+		{
+			int index;
+			index=this->clips->findData(this->mainClip->text());
+			if(this->mainClip->mimeData()->hasText())
+				{
+					if(index==-1)
+						{
+							QString str=this->mainClip->text();
+							if(str.length()>50)
+								str=str.left(50)+"...";
+							this->clips->addItem(str,this->mainClip->text());
+							this->te->setPlainText(this->mainClip->text());
+							this->clips->setCurrentText(str);
+						}
+				}
+
+			if(this->mainClip->mimeData()->hasImage())
+				{
+					const QImage image=QApplication::clipboard()->image();
+					QString imagename=QString("Image-%1").arg(imageCnt++);
+					QTextCursor cursor=this->te->textCursor();
+					this->te->setPlainText("");
+					cursor.insertImage(image);
+					this->te->setTextCursor(cursor);
+					this->clips->addItem(imagename,this->mainClip->image());
+					this->clips->setCurrentText(imagename);
+				}
+
+		});			
+	this->buildMainGui();
+}
+
+void ClipboardClass::buildMainGui(void)
+{
+ 	QSettings	prefs("KDHedger",PACKAGE_NAME);
+	QWidget		*centre=NULL;
+	QVBoxLayout	*vbox=NULL;
+	QHBoxLayout	*hlayout;
+	QWidget		*hbox=NULL;
+	QPushButton	*about=NULL;
+	QPushButton	*sticky=NULL;
+	QPushButton	*quit=NULL;
+
+	this->mainWindow=new QMainWindow;
+	this->mainWindow->setWindowTitle("Clipboard Viewer QT");
+	centre=new QWidget(this->mainWindow);
+	vbox=new QVBoxLayout(centre);
+	vbox->setContentsMargins(0,0,0,0);
+
+	this->te=new QTextEdit(this->mainWindow);
+	vbox->addWidget(this->te);
+
+	hbox=new QWidget(this->mainWindow);
+	hlayout=new QHBoxLayout(hbox);
+	hbox->setLayout(hlayout);
+
+	this->clips=new QComboBox(this->mainWindow);
+	QObject::connect(this->clips,&QComboBox::activated,[this](int index)
+		{
+			QImage		image=this->clips->itemData(index).value<QImage>();
+			QTextCursor	cursor;
+			if(image.isNull()==false)
+				{
+					cursor=this->te->textCursor();
+					this->te->setPlainText("");
+					cursor.insertImage(image);
+					this->te->setTextCursor(cursor);
+					this->mainClip->blockSignals(true);
+						this->mainClip->setImage(image);
+					this->mainClip->blockSignals(false);
+					return;
+				}
+			this->te->setPlainText(this->clips->itemData(index).toString());
+			this->mainClip->setText(this->clips->itemData(index).toString());
+		});
+	hlayout->addWidget(clips,1);
+
+	setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_STICKY",PropModeReplace);
+	sticky=new QPushButton(QIcon::fromTheme("changes-prevent"),"Sticky",this->mainWindow);
+	sticky->setCheckable(true);
+	sticky->setChecked(true);
+	QObject::connect(sticky,&QPushButton::clicked,[this,sticky](bool checked)
+		{
+			if(checked==false)
+				{
+					setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE",NULL,PropModeReplace);
+					sticky->setIcon(QIcon::fromTheme("changes-allow"));
+				}
+			else
+				{
+					setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_STICKY",PropModeReplace);
+					sticky->setIcon(QIcon::fromTheme("changes-prevent"));
+			}
+		});
+	hlayout->addWidget(sticky);
+
+	about=new QPushButton(QIcon::fromTheme("help-about"),"About",this->mainWindow);
+	QObject::connect(about,&QPushButton::clicked,[this]()
+		{
+			QString			pixpath=QString("%1/pixmaps/ClipboardViewerQT.png").arg(DATADIR);
+			AboutBoxClass	about(qApp->activeWindow(),pixpath);
+			QFile			file(QString("%1/docs/gpl-3.0.txt").arg(DATADIR));
+			if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+				{
+					QTextStream in(&file);
+					about.licence=in.readAll();
+					file.close();
+				}
+			about.credits=credits;
+			about.setHomepage("https://github.com/KeithDHedger/ClipboardViewerQT","Clipboard Viewer QT");
+			about.setBodyText("Text and image clipboard viewer");
+			about.showAboutQtButton(true);
+			about.showLicenceButton(true);
+			about.showCreditsButton(true);
+			about.runAbout();
+		});
+	hlayout->addWidget(about);
+
+	quit=new QPushButton(QIcon::fromTheme("application-exit"),"Quit",this->mainWindow);
+	QObject::connect(quit,&QPushButton::clicked,[]()
+		{
+			qApp->exit();
+		});
+	hlayout->addWidget(quit);
+
+	vbox->addWidget(hbox);
+	this->mainWindow->setCentralWidget(centre);
+
+	this->mainWindow->restoreGeometry(prefs.value("geometry").toByteArray());
+	this->mainWindow->show();
+}
+
+void ClipboardClass::setWindowProps(Display *display,Window window,const char* grp,const char *type_name,int what)
+{
+	Atom window_type = XInternAtom(display,grp,False);
+	Atom type = XInternAtom(display,type_name,False);
+
+	XChangeProperty(display,window,window_type,XA_ATOM,32,what,(unsigned char *)&type,1);
+    XFlush(display);
+}
