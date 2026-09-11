@@ -1,8 +1,8 @@
 /*
  *
- * ©K. D. Hedger. Fri 11 Sep 11:26:33 BST 2026 keithdhedger@gmail.com
+ * ©K. D. Hedger. Fri 11 Sep 11:25:52 BST 2026 keithdhedger@gmail.com
 
- * This file (main.cpp) is part of ClipboardViewerQT.
+ * This file (globals.h) is part of ClipboardViewerQT.
 
  * ClipboardViewerQT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,13 @@
  * along with ClipboardViewerQT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "globals.h"
+#ifndef _GLOBALS_
+#define _GLOBALS_
 
-int main(int argv, char **args)
-{
-	QApplication	app(argv, args);
-	QMessageBox		msgBox;
+#include <QApplication>
+#include <QWidget>
 
-	msgBox.setText("Hello World!");
-	msgBox.show();
-	return app.exec();
-}
+#define MAXCLIPMENULEN 48
+#define MAXCLIPS 32
+
+#endif
