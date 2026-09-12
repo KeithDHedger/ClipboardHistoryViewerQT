@@ -1,4 +1,6 @@
 0.1.0
+Set max characters in dropdown to MAXCLIPMENULEN.
+Set number of clips to MAXCLIPS.
 Fixed about box.
 Added screen shots.
 Fixed .desktop file.

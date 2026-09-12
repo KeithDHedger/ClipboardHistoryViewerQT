@@ -47,11 +47,9 @@ ClipboardClass::ClipboardClass()
 					if(index==-1)
 						{
 							QString str=this->mainClip->text();
-							if(str.length()>50)
-								str=str.left(50)+"...";
-							this->clips->addItem(str,this->mainClip->text());
+							this->clips->addItem(str.simplified().left(MAXCLIPMENULEN)+"...",this->mainClip->text());
 							this->te->setPlainText(this->mainClip->text());
-							this->clips->setCurrentText(str);
+							this->clips->setCurrentText(str.simplified().left(MAXCLIPMENULEN)+"...");
 						}
 				}
 
@@ -66,7 +64,8 @@ ClipboardClass::ClipboardClass()
 					this->clips->addItem(imagename,this->mainClip->image());
 					this->clips->setCurrentText(imagename);
 				}
-
+			if(this->clips->count()>MAXCLIPS)
+				this->clips->removeItem(0);
 		});			
 	this->buildMainGui();
 }
@@ -96,23 +95,27 @@ void ClipboardClass::buildMainGui(void)
 	hbox->setLayout(hlayout);
 
 	this->clips=new QComboBox(this->mainWindow);
+	//this->clips->setMinimumContentsLength(MAXCLIPMENULEN);
+	//this->clips->setFont(QFont("Monospace",12));
 	QObject::connect(this->clips,&QComboBox::activated,[this](int index)
 		{
 			QImage		image=this->clips->itemData(index).value<QImage>();
 			QTextCursor	cursor;
-			if(image.isNull()==false)
-				{
-					cursor=this->te->textCursor();
-					this->te->setPlainText("");
-					cursor.insertImage(image);
-					this->te->setTextCursor(cursor);
-					this->mainClip->blockSignals(true);
+			this->mainClip->blockSignals(true);
+				if(image.isNull()==false)
+					{
+						cursor=this->te->textCursor();
+						this->te->setPlainText("");
+						cursor.insertImage(image);
+						this->te->setTextCursor(cursor);
 						this->mainClip->setImage(image);
-					this->mainClip->blockSignals(false);
-					return;
-				}
-			this->te->setPlainText(this->clips->itemData(index).toString());
-			this->mainClip->setText(this->clips->itemData(index).toString());
+					}
+				else
+					{
+						this->te->setPlainText(this->clips->itemData(index).toString());
+						this->mainClip->setText(this->clips->itemData(index).toString());
+					}
+			this->mainClip->blockSignals(false);
 		});
 	hlayout->addWidget(clips,1);
 

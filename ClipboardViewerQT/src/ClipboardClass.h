@@ -23,11 +23,6 @@
 
 #include "globals.h"
 
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-
-#define MAXCLIPMENULEN 48
-#define MAXCLIPS 32
 
 class ClipboardClass
 {
@@ -42,6 +37,7 @@ class ClipboardClass
 		QClipboard		*mainClip=NULL;
 		QComboBox		*clips=NULL;
 		int				imageCnt=1;
+		int				clipcnt=0;
 		Display			*display=NULL;
 
 		void				buildMainGui(void);
