@@ -1,4 +1,5 @@
 0.1.0
+Copying url that points to an image file will now also record the image and the url itself.
 Set max characters in dropdown to MAXCLIPMENULEN.
 Set number of clips to MAXCLIPS.
 Fixed about box.

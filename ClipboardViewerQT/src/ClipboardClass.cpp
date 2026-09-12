@@ -40,6 +40,27 @@ ClipboardClass::ClipboardClass()
 	this->mainClip=qApp->clipboard();
 	QObject::connect(this->mainClip,&QClipboard::dataChanged,[this]()
 		{
+			if(this->mainClip->mimeData()->hasUrls()==true)
+				{
+					QString		saveurl;
+					QByteArray	imageFormat;
+					QImage		image;
+					QImageReader	reader;
+
+					for(const QUrl &url : this->mainClip->mimeData()->urls())
+						{
+							imageFormat=QImageReader::imageFormat(url.toLocalFile());
+							saveurl=url.toString();
+							reader.setFileName(url.toLocalFile());
+							reader.setAutoDetectImageFormat(true);
+					
+							image=reader.read();
+							this->mainClip->setImage(image);
+							this->mainClip->setText(saveurl);
+						}
+					return;			
+				}
+
 			int index;
 			index=this->clips->findData(this->mainClip->text());
 			if(this->mainClip->mimeData()->hasText())
@@ -49,7 +70,7 @@ ClipboardClass::ClipboardClass()
 							QString str=this->mainClip->text();
 							this->clips->addItem(str.simplified().left(MAXCLIPMENULEN)+"...",this->mainClip->text());
 							this->te->setPlainText(this->mainClip->text());
-							this->clips->setCurrentText(str.simplified().left(MAXCLIPMENULEN)+"...");
+							this->clips->setCurrentIndex(this->clips->count()-1);
 						}
 				}
 
@@ -62,8 +83,9 @@ ClipboardClass::ClipboardClass()
 					cursor.insertImage(image);
 					this->te->setTextCursor(cursor);
 					this->clips->addItem(imagename,this->mainClip->image());
-					this->clips->setCurrentText(imagename);
+					this->clips->setCurrentIndex(this->clips->count()-1);
 				}
+
 			if(this->clips->count()>MAXCLIPS)
 				this->clips->removeItem(0);
 		});			
