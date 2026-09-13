@@ -1,4 +1,5 @@
 0.1.0
+Renamed repo.
 Image files that have changed but the filename remains the same ARE recorded.
 Duplicates are not recorded.
 When copying a file uri that points to an image set drop down text to basename for file.
