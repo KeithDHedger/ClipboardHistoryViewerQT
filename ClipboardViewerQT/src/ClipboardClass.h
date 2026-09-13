@@ -23,7 +23,6 @@
 
 #include "globals.h"
 
-
 class ClipboardClass
 {
 	public:
@@ -43,7 +42,6 @@ class ClipboardClass
 		void				setWindowProps(Display *dsp,Window window,const char* grp,const char *type_name,int what);
 		bool				tryForImage(QUrl path);
 		QString			truncateString(const QString &input);
-
 };
 
 #endif
