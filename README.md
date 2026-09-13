@@ -1,4 +1,4 @@
-## ClipboardViewerQT
+## Clipboard History Viewer QT
 A QT based clipboard viewer and clipboard history.
 
 ![Main Window](screenshots/image.png "Main Window")  
