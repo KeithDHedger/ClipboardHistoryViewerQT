@@ -28,6 +28,63 @@ ClipboardClass::~ClipboardClass()
 	XCloseDisplay(this->display);
 }
 
+QString ClipboardClass::truncateString(const QString &input)
+{
+	int		frontLength;
+	int		backLength;
+	QString	front;
+	QString	back ;
+
+ 	if(input.length() <= MAXCLIPMENULEN)
+		return(input);
+ 
+	frontLength=MAXCLIPMENULEN/2;
+	backLength=MAXCLIPMENULEN-frontLength-1;
+
+	front=input.left(frontLength);
+	back=input.right(backLength);
+
+    return(front+"…"+back);
+}
+
+bool ClipboardClass::tryForImage(QUrl path)
+{
+	QByteArray	imageFormat;
+	QImage		image;
+	QImageReader	reader;
+	QString		finalpath;
+	QString		imagename;
+	QTextCursor	cursor;
+	int			index;
+
+	if(path.isLocalFile()==true)
+		finalpath=path.toLocalFile();
+	else
+		finalpath=path.toString();
+
+	imageFormat=QImageReader::imageFormat(finalpath);
+	reader.setFileName(finalpath);
+	reader.setAutoDetectImageFormat(true);
+	image=reader.read();
+	if(image.isNull()==false)
+		{
+			index=this->clips->findData(image);
+			if(index!=-1)
+				return(true);
+
+			this->clips->addItem(this->truncateString(path.toString().simplified()),path);
+			imagename=QFileInfo(path.toString().simplified()).fileName();
+			cursor=this->te->textCursor();
+			this->te->setPlainText("");
+			cursor.insertImage(image);
+			this->te->setTextCursor(cursor);
+			this->clips->addItem(imagename,image);
+			this->clips->setCurrentIndex(this->clips->count()-1);
+			return(true);
+		}
+	return(false);
+}
+
 ClipboardClass::ClipboardClass()
 {
  	this->display=XOpenDisplay(NULL);
@@ -42,39 +99,42 @@ ClipboardClass::ClipboardClass()
 		{
 			if(this->mainClip->mimeData()->hasUrls()==true)
 				{
-					QString		saveurl;
-					QByteArray	imageFormat;
-					QImage		image;
-					QImageReader	reader;
-
 					for(const QUrl &url : this->mainClip->mimeData()->urls())
 						{
-							imageFormat=QImageReader::imageFormat(url.toLocalFile());
-							saveurl=url.toString();
-							reader.setFileName(url.toLocalFile());
-							reader.setAutoDetectImageFormat(true);
-					
-							image=reader.read();
-							this->mainClip->setImage(image);
-							this->mainClip->setText(saveurl);
+							if(this->tryForImage(url)==false)
+								{
+									QString uri=url.toString();
+									int index;
+									index=this->clips->findData(uri);
+									if(index==-1)
+										{
+											this->clips->addItem(this->truncateString(uri.simplified()),uri);
+											this->te->setPlainText(uri);
+											this->clips->setCurrentIndex(this->clips->count()-1);
+										}
+								}
 						}
 					return;			
 				}
-
-			int index;
-			index=this->clips->findData(this->mainClip->text());
-			if(this->mainClip->mimeData()->hasText())
+			else if(this->mainClip->mimeData()->hasText())
 				{
-					if(index==-1)
+					if(this->tryForImage(QUrl(this->mainClip->text()))==true)
 						{
-							QString str=this->mainClip->text();
-							this->clips->addItem(str.simplified().left(MAXCLIPMENULEN)+"...",this->mainClip->text());
-							this->te->setPlainText(this->mainClip->text());
-							this->clips->setCurrentIndex(this->clips->count()-1);
+							return;
+						}
+					else
+						{
+							int index;
+							index=this->clips->findData(this->mainClip->text());
+							if(index==-1)
+								{
+									this->clips->addItem(this->truncateString(this->mainClip->text().simplified()),this->mainClip->text());
+									this->te->setPlainText(this->mainClip->text());
+									this->clips->setCurrentIndex(this->clips->count()-1);
+								}
 						}
 				}
-
-			if(this->mainClip->mimeData()->hasImage())
+			else if(this->mainClip->mimeData()->hasImage())
 				{
 					const QImage image=QApplication::clipboard()->image();
 					QString imagename=QString("Image-%1").arg(imageCnt++);
@@ -197,11 +257,11 @@ void ClipboardClass::buildMainGui(void)
 	this->mainWindow->show();
 }
 
-void ClipboardClass::setWindowProps(Display *display,Window window,const char* grp,const char *type_name,int what)
+void ClipboardClass::setWindowProps(Display *dsp,Window window,const char* grp,const char *type_name,int what)
 {
-	Atom window_type = XInternAtom(display,grp,False);
-	Atom type = XInternAtom(display,type_name,False);
+	Atom window_type = XInternAtom(dsp,grp,False);
+	Atom type = XInternAtom(dsp,type_name,False);
 
-	XChangeProperty(display,window,window_type,XA_ATOM,32,what,(unsigned char *)&type,1);
-    XFlush(display);
+	XChangeProperty(dsp,window,window_type,XA_ATOM,32,what,(unsigned char *)&type,1);
+    XFlush(dsp);
 }

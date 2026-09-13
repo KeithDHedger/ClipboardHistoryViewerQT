@@ -1,5 +1,9 @@
 0.1.0
-Copying url that points to an image file will now also record the image and the url itself.
+Image files that have changed but the filename remains the same ARE recorded.
+Duplicates are not recorded.
+When copying a file uri that points to an image set drop down text to basename for file.
+Dropdown entries now truncated with ellipses in the middle.
+Copying a url or filepath that points to an image file will now also record the image and the url itself.
 Set max characters in dropdown to MAXCLIPMENULEN.
 Set number of clips to MAXCLIPS.
 Fixed about box.

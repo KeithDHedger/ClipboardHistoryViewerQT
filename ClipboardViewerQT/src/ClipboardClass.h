@@ -30,7 +30,6 @@ class ClipboardClass
 		ClipboardClass();
 		~ClipboardClass();
 
-
 	private:
 		QMainWindow		*mainWindow=NULL;
 		QTextEdit		*te=NULL;
@@ -41,7 +40,9 @@ class ClipboardClass
 		Display			*display=NULL;
 
 		void				buildMainGui(void);
-		void				setWindowProps(Display *display,Window window,const char* grp,const char *type_name,int what);
+		void				setWindowProps(Display *dsp,Window window,const char* grp,const char *type_name,int what);
+		bool				tryForImage(QUrl path);
+		QString			truncateString(const QString &input);
 
 };
 
