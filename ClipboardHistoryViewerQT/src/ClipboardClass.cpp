@@ -223,7 +223,7 @@ void ClipboardClass::buildMainGui(void)
 	about=new QPushButton(QIcon::fromTheme("help-about"),"About",this->mainWindow);
 	QObject::connect(about,&QPushButton::clicked,[this]()
 		{
-			QString			pixpath=QString("%1/pixmaps/ClipboardViewerQT.png").arg(DATADIR);
+			QString			pixpath=QString("%1/pixmaps/ClipboardHistoryViewerQT.png").arg(DATADIR);
 			AboutBoxClass	about(qApp->activeWindow(),pixpath);
 			QFile			file(QString("%1/docs/gpl-3.0.txt").arg(DATADIR));
 			if(file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -233,7 +233,7 @@ void ClipboardClass::buildMainGui(void)
 					file.close();
 				}
 			about.credits=credits;
-			about.setHomepage("https://github.com/KeithDHedger/ClipboardViewerQT","Clipboard Viewer QT");
+			about.setHomepage("https://github.com/KeithDHedger/ClipboardHistoryViewerQT","Clipboard Viewer QT");
 			about.setBodyText("Text and image clipboard viewer");
 			about.showAboutQtButton(true);
 			about.showLicenceButton(true);

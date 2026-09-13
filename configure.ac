@@ -1,6 +1,6 @@
 #
 #
-AC_INIT([ClipboardViewerQT],[0.1.0],[PROJ],[ClipboardViewerQT])
+AC_INIT([ClipboardHistoryViewerQT],[0.2.0],[PROJ],[ClipboardHistoryViewerQT])
 
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CXX
@@ -24,6 +24,6 @@ X11_MODULES="x11 >= 1.0.0"
 PKG_CHECK_MODULES(X11, $X11_MODULES)
 AC_SUBST(X11_LIBS)
 
-AC_CONFIG_FILES(Makefile ClipboardViewerQT/app/Makefile)
+AC_CONFIG_FILES(Makefile ClipboardHistoryViewerQT/app/Makefile)
 AC_OUTPUT
 

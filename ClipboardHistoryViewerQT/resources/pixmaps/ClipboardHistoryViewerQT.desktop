@@ -1,10 +1,10 @@
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
-Name=ClipboardViewerQT
+Name=ClipboardHistoryViewerQT
 Comment=
 Terminal=false
 Type=Application
 Categories=Utility;
-Icon=ClipboardViewerQT
-Exec=clipboardviewerqt
+Icon=ClipboardHistoryViewerQT
+Exec=clipboardhistoryviewerqt

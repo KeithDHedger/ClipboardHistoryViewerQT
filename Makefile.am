@@ -1,5 +1,5 @@
 
-SUBDIRS = ClipboardViewerQT/app
+SUBDIRS = ClipboardHistoryViewerQT/app
 
 remake:
 	$(shell ./remakesourcelist)
