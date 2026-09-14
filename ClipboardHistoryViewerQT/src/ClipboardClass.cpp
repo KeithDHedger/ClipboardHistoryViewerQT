@@ -75,7 +75,8 @@ bool ClipboardClass::tryForImage(QUrl path)
 			this->clips->addItem(this->truncateString(path.toString().simplified()),path);
 			imagename=QFileInfo(path.toString().simplified()).fileName();
 			cursor=this->te->textCursor();
-			this->te->setPlainText("");
+
+			this->te->clear();
 			cursor.insertImage(image);
 			this->te->setTextCursor(cursor);
 			this->clips->addItem(imagename,image);
@@ -139,7 +140,7 @@ ClipboardClass::ClipboardClass()
 					const QImage image=QApplication::clipboard()->image();
 					QString imagename=QString("Image-%1").arg(imageCnt++);
 					QTextCursor cursor=this->te->textCursor();
-					this->te->setPlainText("");
+					this->te->clear();
 					cursor.insertImage(image);
 					this->te->setTextCursor(cursor);
 					this->clips->addItem(imagename,this->mainClip->image());
@@ -162,6 +163,8 @@ void ClipboardClass::buildMainGui(void)
 	QPushButton	*about=NULL;
 	QPushButton	*sticky=NULL;
 	QPushButton	*quit=NULL;
+	QPushButton	*clearall=NULL;
+	QPushButton	*clear=NULL;
 
 	this->mainWindow=new QMainWindow;
 	this->mainWindow->setWindowTitle("Clipboard Viewer QT");
@@ -170,16 +173,20 @@ void ClipboardClass::buildMainGui(void)
 	vbox->setContentsMargins(0,0,0,0);
 
 	this->te=new QTextEdit(this->mainWindow);
+	this->te->setReadOnly(true);
 	vbox->addWidget(this->te);
 
 	hbox=new QWidget(this->mainWindow);
 	hlayout=new QHBoxLayout(hbox);
 	hbox->setLayout(hlayout);
 
+	clear=new QPushButton(QIcon::fromTheme("edit-clear"),"Clear",this->mainWindow);
+	clearall=new QPushButton(QIcon::fromTheme("edit-clear"),"Clear All",this->mainWindow);
+	clear->setEnabled(false);
+	clearall->setEnabled(false);
+
 	this->clips=new QComboBox(this->mainWindow);
-	//this->clips->setMinimumContentsLength(MAXCLIPMENULEN);
-	//this->clips->setFont(QFont("Monospace",12));
-	QObject::connect(this->clips,&QComboBox::activated,[this](int index)
+	QObject::connect(this->clips,&QComboBox::activated,[this,clear,clearall](int index)
 		{
 			QImage		image=this->clips->itemData(index).value<QImage>();
 			QTextCursor	cursor;
@@ -187,7 +194,7 @@ void ClipboardClass::buildMainGui(void)
 				if(image.isNull()==false)
 					{
 						cursor=this->te->textCursor();
-						this->te->setPlainText("");
+						this->te->clear();
 						cursor.insertImage(image);
 						this->te->setTextCursor(cursor);
 						this->mainClip->setImage(image);
@@ -197,11 +204,47 @@ void ClipboardClass::buildMainGui(void)
 						this->te->setPlainText(this->clips->itemData(index).toString());
 						this->mainClip->setText(this->clips->itemData(index).toString());
 					}
+
+			if(this->clips->count()==0)
+				{
+					clear->setEnabled(false);
+					clearall->setEnabled(false);
+				}
 			this->mainClip->blockSignals(false);
+		});
+
+	QObject::connect(this->clips,&QComboBox::currentIndexChanged,[this,clear,clearall](int index)
+		{
+			if(this->clips->count()>0)
+				{
+					clear->setEnabled(true);
+					clearall->setEnabled(true);
+				}
 		});
 	hlayout->addWidget(clips,1);
 
 	setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_STICKY",PropModeReplace);
+	QObject::connect(clear,&QPushButton::clicked,[this](bool checked)
+		{
+			int hold=this->clips->currentIndex();
+			this->clips->removeItem(this->clips->currentIndex());
+
+			if(hold>=this->clips->count())
+				emit this->clips->activated(this->clips->count()-1);
+			else
+				emit this->clips->activated(hold);
+		});
+	hlayout->addWidget(clear);
+
+	QObject::connect(clearall,&QPushButton::clicked,[this,clear,clearall](bool checked)
+		{
+			this->clips->clear();
+			this->te->clear();
+			clear->setEnabled(false);
+			clearall->setEnabled(false);
+		});
+	hlayout->addWidget(clearall);
+	
 	sticky=new QPushButton(QIcon::fromTheme("changes-prevent"),"Sticky",this->mainWindow);
 	sticky->setCheckable(true);
 	sticky->setChecked(true);
@@ -233,13 +276,12 @@ void ClipboardClass::buildMainGui(void)
 					file.close();
 				}
 			about.credits=credits;
-			about.setHomepage("https://github.com/KeithDHedger/ClipboardHistoryViewerQT","Clipboard Viewer QT");
+			about.setHomepage("https://github.com/KeithDHedger/ClipboardHistoryViewerQT","Clipboard History Viewer QT");
 			about.setBodyText("Text and image clipboard viewer");
 			about.showAboutQtButton(true);
 			about.showLicenceButton(true);
 			about.showCreditsButton(true);
 			about.runAbout();
-			//this->mainWindow->activateWindow();
 		});
 	hlayout->addWidget(about);
 

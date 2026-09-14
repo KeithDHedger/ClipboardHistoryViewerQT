@@ -1,4 +1,8 @@
 0.2.0
+Set edit window to read only.
+Set clear/clearall enabled/disabled.
+Added 'clear' to clear current item.
+Added 'clear all' to clear all items.
 Updated build files.
 Changed appname.
 

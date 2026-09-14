@@ -56,7 +56,8 @@ AUTHORS
 NEWS
 config.h
 sources
-ClipboardViewerQT/app/clipboardviewerqt
+
+ClipboardHistoryViewerQT/app/clipboardhistoryviewerqt
 *.o
 ignorelibleaks
 runwithval
