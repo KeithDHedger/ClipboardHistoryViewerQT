@@ -1,0 +1,743 @@
+
+#include "globals.h"
+
+/**
+* this->dialogPrefsClass class destroy.
+*/
+prefsClass::~prefsClass()
+{
+	for(int j=0;j<this->dialogPrefs.comboBoxCnt;j++)
+		delete this->dialogPrefs.comboBoxes[j];
+				
+	for(int j=0;j<this->dialogPrefs.editBoxCnt;j++)
+		delete this->dialogPrefs.editBoxes[j];
+
+	for(int j=0;j<this->dialogPrefs.checkBoxCnt;j++)
+		delete this->dialogPrefs.checkBoxes[j];
+
+	for(int j=0;j<this->dialogPrefs.colourBoxCnt;j++)
+		delete this->dialogPrefs.colourBoxes[j];
+
+	for(int j=0;j<this->dialogPrefs.fontBoxCnt;j++)
+		delete this->dialogPrefs.fontBoxes[j];
+
+	for(int j=0;j<this->dialogPrefs.fileBoxCnt;j++)
+		delete this->dialogPrefs.fileBoxes[j];
+
+	delete this->dialogPrefs.theDialog;
+}
+
+/**
+* this->dialogPrefsClass.
+*/
+prefsClass::prefsClass(QString pname)
+{
+	if(pname.isEmpty()==true)
+		this->prefsFileName=qApp->applicationName();
+	else
+		this->prefsFileName=pname;
+
+//	this->tempPrefsFileName=QString("%1/.config/KDHedger/%2.temp.conf").arg(getenv("HOME")).arg(this->prefsFileName);
+	this->tempPrefsFileName=QString("%1.temp").arg(this->prefsFileName);
+//this->persistantName=this->prefsFileName;
+}
+
+QString prefsClass::bestFontColour(QString colour)
+{
+	QColor	cc(colour);
+    int		r=0,g=0,b=0;
+
+	r=cc.red();
+	g=cc.green();
+	b=cc.blue();
+
+	if((r+r+r+b+g+g+g+g)>>3>128)
+		return("black");
+	else
+		return("white");
+}
+
+unsigned long prefsClass::hashFromKey(QString key)
+{
+	QString		str=key.replace(" ","_").toLower();
+	unsigned		long hash=0;
+
+	for(int i=0;i<str.length();i++)
+		hash=31*hash+str.at(i).toLatin1();
+
+	return(hash);
+}
+
+void prefsClass::writePrefs(bool usereal)
+{
+	QSettings	*prefs=NULL;
+	if(usereal==true)
+		prefs=new QSettings("KDHedger",this->prefsFileName);
+	else
+		prefs=new QSettings("KDHedger",this->tempPrefsFileName);
+		
+	//QSettings	prefs("KDHedger",this->prefsFileName);
+
+	for(int j=0;j<this->dialogPrefs.comboBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.comboBoxesPrefsName[j],this->dialogPrefs.comboBoxes[j]->currentText());
+
+	for(int j=0;j<this->dialogPrefs.editBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.editBoxesPrefsName[j],this->dialogPrefs.editBoxes[j]->text());
+
+	for(int j=0;j<this->dialogPrefs.checkBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.checkBoxesPrefsName[j],this->dialogPrefs.checkBoxes[j]->isChecked());
+
+	for(int j=0;j<this->dialogPrefs.colourBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.colourBoxesPrefsName[j],this->dialogPrefs.colourBoxes[j]->text());
+
+	for(int j=0;j<this->dialogPrefs.fontBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.fontBoxesPrefsName[j],this->dialogPrefs.fontBoxes[j]->text());
+
+	for(int j=0;j<this->dialogPrefs.fileBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.fileBoxesPrefsName[j],this->dialogPrefs.fileBoxes[j]->text());
+
+	for(int j=0;j<this->dialogPrefs.spinBoxCnt;j++)
+		prefs->setValue(this->dialogPrefs.spinBoxesPrefsName[j],this->dialogPrefs.spinBoxes[j]->text());
+
+	prefs->setValue("prefsgeometry",this->dialogPrefs.theDialog->saveGeometry());
+	delete prefs;
+}
+
+void prefsClass::writeManualPrefs(void)
+{
+	QSettings	defaults("KDHedger",this->prefsFileName);
+
+	for(int j=0;j<this->prefsData.size();j++)
+		defaults.setValue(this->prefsNames.at(j),this->prefsData.value(this->hashFromKey(this->prefsNames.at(j))));
+}
+
+void prefsClass::writeSinglePref(QString name)
+{
+	QSettings	defaults("KDHedger",this->prefsFileName);
+
+	if(this->prefsData.contains(this->hashFromKey(name)))
+		defaults.setValue(this->fixPrefName(name),this->prefsData.value(this->hashFromKey(name)));
+}
+
+QString prefsClass::fixPrefName(QString name)
+{
+	return(name.replace(" ","_").toLower());
+}
+
+void prefsClass::addPref(QString name,QVariant qvar)
+{
+	this->prefsData[this->hashFromKey(name)]=qvar;
+	this->prefsNames<<this->fixPrefName(name);
+}
+
+void prefsClass::appendStrPref(QString name,QString str)
+{
+	if(this->prefsData.contains(this->hashFromKey(name)))
+		this->setPrefValue(name,this->getPrefValue(name).toStringList()<<str);
+	else
+		this->addPref(name,str);
+}
+
+void prefsClass::setPrefValue(QString name,QVariant val)
+{
+	this->prefsData[this->hashFromKey(name)]=val;
+}
+
+QVariant prefsClass::getPrefValue(QString name)
+{
+	return(this->prefsData.value(this->hashFromKey(name)));
+}
+
+QVariant prefsClass::getSavedPrefValue(QString name)
+{
+	QSettings	defaults("KDHedger",this->prefsFileName);
+	QString		str=fixPrefName(name);
+
+	if(defaults.contains(str))
+		return(defaults.value(str));
+
+	return(QVariant());
+}
+
+QVariant prefsClass::addPrefSavedValue(QString name,QVariant qvar)
+{
+	QVariant var=this->getSavedPrefValue(name);
+	QVariant rvar;
+
+	if(var.isValid())
+		{
+			this->addPref(name,var);
+			rvar=var;
+		}
+	else
+		{
+			this->addPref(name,qvar);
+			rvar=qvar;
+		}
+	return(rvar);
+}
+
+void prefsClass::printCurrentPrefs()
+{
+	if(this->dialogPrefs.valid==true)
+		{
+			QString		opsep=this->opSep;
+
+			for(int j=0;j<this->dialogPrefs.comboBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.comboBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.comboBoxes[j]->currentText()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.editBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.editBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.editBoxes[j]->text()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.checkBoxCnt;j++)
+					QTextStream(stdout)<<QString(this->dialogPrefs.checkBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.checkBoxes[j]->isChecked()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.colourBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.colourBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.colourBoxes[j]->text()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.fontBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.fontBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.fontBoxes[j]->text()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.fileBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.fileBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.fileBoxes[j]->text()<<"'"<<opsep;
+
+			for(int j=0;j<this->dialogPrefs.spinBoxCnt;j++)
+				QTextStream(stdout)<<QString(this->dialogPrefs.spinBoxesPrefsName[j]).replace("/","_")<<"='"<<this->dialogPrefs.spinBoxes[j]->text()<<"'"<<opsep;
+		}
+}
+
+void prefsClass::createDialog(QString title,QStringList items,QSize sze)
+{
+	QWidget		*hbox=NULL;
+	QVBoxLayout	*docvlayout=NULL;
+	QHBoxLayout	*hlayout=NULL;
+	QString		prefsentry;
+	QString		labelstr;
+	QFrame		f;
+	QTabWidget	*tabbar=NULL;
+	QVBoxLayout	*mainvlayout;
+	QSettings	*defaults=NULL;
+	QString		fname=QString("%1/.config/KDHedger/%2.conf").arg(getenv("HOME")).arg(this->tempPrefsFileName);
+	int			j=0;
+
+	if(QFileInfo::exists(fname)==true)
+		defaults=new QSettings("KDHedger",QString("%1").arg(this->tempPrefsFileName));
+	else
+		defaults=new QSettings("KDHedger",QString("%1").arg(this->prefsFileName));
+
+	f.setFrameStyle(QFrame::HLine|QFrame::Plain);
+	this->dialogPrefs.theDialog=new QDialog();
+	this->dialogPrefs.theDialog->setWindowTitle(title);
+
+	mainvlayout=new QVBoxLayout(this->dialogPrefs.theDialog);
+	this->bb=new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel|QDialogButtonBox::Apply);
+
+	if(defaults->contains("prefsgeometry"))
+		this->dialogPrefs.theDialog->restoreGeometry(defaults->value("prefsgeometry").toByteArray());
+	else
+		this->dialogPrefs.theDialog->setGeometry(100,100,329,128);
+
+	QSize tsze(this->dialogPrefs.theDialog->size());
+	if(sze.width()!=-1)
+		tsze.setWidth(sze.width());
+	if(sze.height()!=-1)
+		tsze.setHeight(sze.height());
+
+	this->dialogPrefs.theDialog->resize(tsze);
+
+	if(this->paged==true)
+		{
+			tabbar=new QTabWidget(this->dialogPrefs.theDialog);
+			
+			mainvlayout->setContentsMargins(0,0,0,0);
+			mainvlayout->addWidget(tabbar);
+			this->dialogPrefs.theDialog->setLayout(mainvlayout);
+	}
+	else
+		{
+			docvlayout=new QVBoxLayout(this->dialogPrefs.theDialog);
+			this->dialogPrefs.theDialog->setLayout(mainvlayout);
+			mainvlayout->addLayout(docvlayout);
+		}
+
+	j=0;
+	while(j<items.size())
+		{
+			//new page
+			if((this->paged==true) && (items.at(j).compare("page")==0))
+				{
+					QWidget	*vbox;
+					if(docvlayout!=NULL)
+						docvlayout->addWidget(new QWidget,1);
+					docvlayout=new QVBoxLayout;
+					j++;
+					labelstr=items.at(j).trimmed();
+					vbox=new QWidget;
+					vbox->setLayout(docvlayout);
+					tabbar->addTab(vbox,QIcon(""),labelstr);
+				}
+
+			//edits
+			if(items.at(j).compare("edit")==0)
+				{
+					hbox=new QWidget;
+					hlayout=new QHBoxLayout;
+					hlayout->setContentsMargins(0,0,0,0);
+					hbox->setLayout(hlayout);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					hlayout->addWidget(new QLabel(labelstr),1);
+					prefsentry.replace(" ","_");
+					this->dialogPrefs.editBoxesPrefsName[this->dialogPrefs.editBoxCnt]=prefsentry.toLower();
+					j++;
+					this->dialogPrefs.editBoxes[this->dialogPrefs.editBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.editBoxesPrefsName[this->dialogPrefs.editBoxCnt],items.at(j)).toString());
+					hlayout->addWidget(this->dialogPrefs.editBoxes[this->dialogPrefs.editBoxCnt],RITESTRETCH);
+					docvlayout->addWidget(hbox,0);
+					this->dialogPrefs.editBoxes[this->dialogPrefs.editBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.editBoxCnt++;
+				}
+
+			//spin boxes
+			if(items.at(j).compare("spinner")==0)
+				{
+					hbox=new QWidget;
+					hlayout=new QHBoxLayout;
+					hlayout->setContentsMargins(0,0,0,0);
+					hbox->setLayout(hlayout);
+					j++;
+					labelstr=items.at(j);
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]=new QDoubleSpinBox();
+					prefsentry.replace(" ","_");
+					this->dialogPrefs.spinBoxesPrefsName[this->dialogPrefs.spinBoxCnt]=prefsentry.toLower();
+					j++;
+					this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setMinimum(items.at(j++).toDouble());
+					this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setMaximum(items.at(j++).toDouble());
+					this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setValue(defaults->value(this->dialogPrefs.spinBoxesPrefsName[this->dialogPrefs.spinBoxCnt],items.at(j++)).toDouble());	
+					this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setSingleStep(items.at(j).toDouble());
+					if(items.at(j).lastIndexOf('.')!=-1)
+						this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setDecimals(items.at(j).length()-items.at(j).lastIndexOf('.')-1);
+					else
+						this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt]->setDecimals(0);
+
+					hlayout->addWidget(this->dialogPrefs.spinBoxes[this->dialogPrefs.spinBoxCnt],RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.spinBoxCnt++;
+				}
+
+			//combo
+			if(items.at(j).compare("combostart")==0)
+				{
+					hbox=new QWidget;
+					hlayout=new QHBoxLayout;
+					hlayout->setContentsMargins(0,0,0,0);
+					hbox->setLayout(hlayout);
+					j++;
+					labelstr=items.at(j);
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt]=new QComboBox();
+					prefsentry.replace(" ","_");
+					this->dialogPrefs.comboBoxesPrefsName[this->dialogPrefs.comboBoxCnt]=prefsentry.toLower();
+					j++;
+					QString defstr=items.at(j).trimmed();
+					j++;
+					while(items.at(j).compare("comboend")!=0)
+						{
+							this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt]->addItem(items.at(j));
+							j++;
+						}
+					this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt]->setCurrentText(defstr);
+					this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt]->setCurrentText(defaults->value(this->dialogPrefs.comboBoxesPrefsName[this->dialogPrefs.comboBoxCnt],items.at(j)).toString());
+					this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt]->setMinimumSize(1,1);
+					hlayout->addWidget(this->dialogPrefs.comboBoxes[this->dialogPrefs.comboBoxCnt],RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.comboBoxCnt++;
+				}
+
+			//checkboxes
+			if(items.at(j).compare("check")==0)
+				{
+					hbox=new QWidget;
+					hlayout=new QHBoxLayout;
+					hlayout->setContentsMargins(0,0,0,0);
+					hbox->setLayout(hlayout);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					this->dialogPrefs.checkBoxesPrefsName[this->dialogPrefs.checkBoxCnt]=prefsentry.toLower();
+					this->dialogPrefs.checkBoxes[this->dialogPrefs.checkBoxCnt]=new QCheckBox(labelstr);
+					j++;
+					this->dialogPrefs.checkBoxes[this->dialogPrefs.checkBoxCnt]->setChecked(defaults->value(this->dialogPrefs.checkBoxesPrefsName[this->dialogPrefs.checkBoxCnt],items.at(j)).toBool());
+					hlayout->addWidget(this->dialogPrefs.checkBoxes[this->dialogPrefs.checkBoxCnt],1);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.checkBoxCnt++;
+				}
+
+			//colours
+			if(items.at(j).compare("colour")==0)
+				{
+					hbox=new QWidget;
+					QWidget *hbox2=new QWidget;
+					hlayout=new QHBoxLayout;
+					QHBoxLayout *hlayout2=new QHBoxLayout;
+					QPushButton *pb=NULL;
+					hlayout->setContentsMargins(0,0,0,0);
+					hlayout->setSpacing(0);
+					hlayout2->setContentsMargins(3,0,0,0);
+					hlayout2->setSpacing(0);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.colourBoxesPrefsName[this->dialogPrefs.colourBoxCnt]=prefsentry.toLower();
+					j++;
+					pb=new QPushButton(QIcon::fromTheme("preferences-desktop-theme"),"");
+					pb->setMaximumWidth(24);
+					hlayout2->addWidget(pb,1);
+					this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.colourBoxesPrefsName[this->dialogPrefs.colourBoxCnt],items.at(j)).toString());	
+					this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]->setStyleSheet(QString("background: %1;\ncolor: %2;").arg(this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]->text()).arg(this->bestFontColour(this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]->text())));
+					this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]->update();
+					QObject::connect(pb,&QPushButton::clicked,[this,pb,cbnum=this->dialogPrefs.colourBoxCnt]()
+						{
+							QColor colour;
+							
+							colour=QColorDialog::getColor(this->dialogPrefs.colourBoxes[cbnum]->text(),nullptr,"Select Colour",QColorDialog::ShowAlphaChannel);
+							if(colour.isValid()==true)
+								{
+									QString s;
+									s=QString("background: %1;\ncolor: %2;").arg(colour.name(QColor::HexArgb)).arg(this->bestFontColour(colour.name(QColor::HexArgb)));
+									this->dialogPrefs.colourBoxes[cbnum]->setStyleSheet(s);//ding ding ding
+									this->dialogPrefs.colourBoxes[cbnum]->update();
+									this->dialogPrefs.colourBoxes[cbnum]->setText(colour.name(QColor::HexArgb));
+									this->dialogPrefs.colourBoxes[cbnum]->setCursorPosition(0);
+								}
+						});
+					hlayout2->addWidget(this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt],2);
+					hbox2->setLayout(hlayout2);
+					hbox->setLayout(hlayout);
+					hlayout->addWidget(hbox2,RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.colourBoxes[this->dialogPrefs.colourBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.colourBoxCnt++;
+				}
+
+			//font
+			if(items.at(j).compare("font")==0)
+				{
+					QWidget		*hbox2=new QWidget;
+					QHBoxLayout	*hlayout2=new QHBoxLayout;
+					QPushButton	*pb=NULL;
+					QFont		font;
+
+					hlayout=new QHBoxLayout;
+					hbox=new QWidget;
+					hlayout->setContentsMargins(0,0,0,0);
+					hlayout->setSpacing(0);
+					hlayout2->setContentsMargins(3,0,0,0);
+					hlayout2->setSpacing(0);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.fontBoxesPrefsName[this->dialogPrefs.fontBoxCnt]=prefsentry.toLower();
+					j++;
+					pb=new QPushButton(QIcon::fromTheme("preferences-desktop-font"),"");
+					pb->setMaximumWidth(24);
+					hlayout2->addWidget(pb,1);
+					this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.fontBoxesPrefsName[this->dialogPrefs.fontBoxCnt],items.at(j)).toString());	
+					font.fromString(this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt]->text());
+					this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt]->setFont(font);
+					this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt]->update();
+					QObject::connect(pb,&QPushButton::clicked,[this,pb,fbnum=this->dialogPrefs.fontBoxCnt]()
+						{
+							bool		ok=false;
+							QFont	tfont;
+							QFont	font;
+
+							tfont.fromString(this->dialogPrefs.fontBoxes[fbnum]->text());
+							font=QFontDialog::getFont(&ok,tfont,nullptr,"Seleect Font");
+							if(ok==true)
+								{
+									this->dialogPrefs.fontBoxes[fbnum]->setText(font.toString());
+									this->dialogPrefs.fontBoxes[fbnum]->setCursorPosition(0);
+									this->dialogPrefs.fontBoxes[fbnum]->setFont(font);
+									this->dialogPrefs.fontBoxes[fbnum]->update();
+								}
+						});
+					hlayout2->addWidget(this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt],2);
+					hbox2->setLayout(hlayout2);
+					hbox->setLayout(hlayout);
+					hlayout->addWidget(hbox2,RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.fontBoxes[this->dialogPrefs.fontBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.fontBoxCnt++;
+				}
+
+			//load files
+			if(items.at(j).compare("file")==0)
+				{
+					QWidget		*hbox2=new QWidget;
+					QHBoxLayout	*hlayout2=new QHBoxLayout;
+					QPushButton	*pb=NULL;
+
+					hlayout=new QHBoxLayout;
+					hbox=new QWidget;
+					hlayout->setContentsMargins(0,0,0,0);
+					hlayout->setSpacing(0);
+					hlayout2->setContentsMargins(3,0,0,0);
+					hlayout2->setSpacing(0);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt]=prefsentry.toLower();
+					j++;
+					pb=new QPushButton(QIcon::fromTheme("document-open"),"");
+					pb->setMaximumWidth(24);
+					hlayout2->addWidget(pb,1);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt],items.at(j)).toString());	
+					QObject::connect(pb,&QPushButton::clicked,[this,pb,filenum=this->dialogPrefs.fileBoxCnt]()
+						{
+							QString filename=QFileDialog::getOpenFileName(nullptr,"Select File",this->dialogPrefs.fileBoxes[filenum]->text());
+							if(filename.isEmpty()==false)
+								{
+									this->dialogPrefs.fileBoxes[filenum]->setText(filename);
+									this->dialogPrefs.fileBoxes[filenum]->setCursorPosition(0);
+								}
+						});
+					hlayout2->addWidget(this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt],2);
+					hbox2->setLayout(hlayout2);
+					hbox->setLayout(hlayout);
+					hlayout->addWidget(hbox2,RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.fileBoxCnt++;
+				}
+
+			//select folders
+			if(items.at(j).compare("folder")==0)
+				{
+					QWidget		*hbox2=new QWidget;
+					QHBoxLayout	*hlayout2=new QHBoxLayout;
+					QPushButton	*pb=NULL;
+
+					hlayout=new QHBoxLayout;
+					hbox=new QWidget;
+					hlayout->setContentsMargins(0,0,0,0);
+					hlayout->setSpacing(0);
+					hlayout2->setContentsMargins(3,0,0,0);
+					hlayout2->setSpacing(0);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt]=prefsentry.toLower();
+					j++;
+					pb=new QPushButton(QIcon::fromTheme("folder-open"),"");
+
+					pb->setMaximumWidth(24);
+					hlayout2->addWidget(pb,1);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt],items.at(j)).toString());	
+					QObject::connect(pb,&QPushButton::clicked,[this,pb,foldnum=this->dialogPrefs.fileBoxCnt]()
+						{
+							QString foldername=QFileDialog::getExistingDirectory(nullptr,"Select Folder",this->dialogPrefs.fileBoxes[foldnum]->text(),QFileDialog::ShowDirsOnly);
+							if(foldername.isEmpty()==false)
+								{
+									this->dialogPrefs.fileBoxes[foldnum]->setText(foldername);
+									this->dialogPrefs.fileBoxes[foldnum]->setCursorPosition(0);
+								}
+						});
+					hlayout2->addWidget(this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt],2);
+					hbox2->setLayout(hlayout2);
+					hbox->setLayout(hlayout);
+					hlayout->addWidget(hbox2,RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.fileBoxCnt++;
+				}
+
+			//save files
+			if(items.at(j).compare("save")==0)
+				{
+					QWidget		*hbox2=new QWidget;
+					QHBoxLayout	*hlayout2=new QHBoxLayout;
+					QPushButton	*pb=NULL;
+
+					hlayout=new QHBoxLayout;
+					hbox=new QWidget;
+					hlayout->setContentsMargins(0,0,0,0);
+					hlayout->setSpacing(0);
+					hlayout2->setContentsMargins(3,0,0,0);
+					hlayout2->setSpacing(0);
+					j++;
+					labelstr=items.at(j).trimmed();
+					prefsentry=labelstr;
+					labelstr=labelstr.mid(labelstr.lastIndexOf("/")+1,-1);
+					prefsentry.replace(" ","_");
+					hlayout->addWidget(new QLabel(labelstr),1);
+					this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt]=prefsentry.toLower();
+					j++;
+					pb=new QPushButton(QIcon::fromTheme("document-save"),"");
+					pb->setMaximumWidth(24);
+					hlayout2->addWidget(pb,1);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]=new QLineEdit(defaults->value(this->dialogPrefs.fileBoxesPrefsName[this->dialogPrefs.fileBoxCnt],items.at(j)).toString());	
+					QObject::connect(pb,&QPushButton::clicked,[this,pb,filenum=this->dialogPrefs.fileBoxCnt]()
+						{
+							QString filename=QFileDialog::getSaveFileName(this->dialogPrefs.theDialog,"Save File",this->dialogPrefs.fileBoxes[filenum]->text());
+							if(filename.isEmpty()==false)
+								{
+									this->dialogPrefs.fileBoxes[filenum]->setText(filename);
+									this->dialogPrefs.fileBoxes[filenum]->setCursorPosition(0);
+								}
+						});
+					hlayout2->addWidget(this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt],2);
+					hbox2->setLayout(hlayout2);
+					hbox->setLayout(hlayout);
+					hlayout->addWidget(hbox2,RITESTRETCH);
+					docvlayout->addWidget(hbox);
+					this->dialogPrefs.fileBoxes[this->dialogPrefs.fileBoxCnt]->setCursorPosition(0);
+					this->dialogPrefs.fileBoxCnt++;
+				}
+			j++;
+		}
+
+	if(this->paged==true)
+		{
+			hbox=new QWidget;
+			docvlayout->addWidget(hbox,1);
+		}
+
+	QObject::connect(this->bb,&QDialogButtonBox::clicked,[this](QAbstractButton *button)
+		{
+			this->selectedButton=this->bb->standardButton(button);
+			switch(this->bb->standardButton(button))
+				{
+					case QDialogButtonBox::Ok:
+						{
+							this->dialogPrefs.theDialog->accept();
+							this->dialogPrefs.valid=true;
+							this->writePrefs(false);
+						}
+						break;
+
+					case QDialogButtonBox::Apply:
+						{
+							this->dialogPrefs.valid=true;
+							this->dialogPrefs.theDialog->accept();
+							this->writePrefs(true);
+							this->cleanTemp(this->prefsFileName);
+						}			
+						break;
+
+					case QDialogButtonBox::Cancel:
+						this->dialogPrefs.theDialog->reject();
+						this->dialogPrefs.valid=false;
+						break;
+					default:
+						break;
+				}
+		});
+
+	if(this->paged==false)
+		{
+			mainvlayout->addWidget(&f);
+			mainvlayout->addWidget(this->bb);
+		}
+	else
+		{
+			QHBoxLayout *hbox=new QHBoxLayout;
+			hbox->addWidget(this->bb);
+			hbox->addSpacing(8);
+			
+			mainvlayout->addLayout(hbox);
+			mainvlayout->addSpacing(8);
+		}
+	delete defaults;
+}
+
+void prefsClass::cleanTemp(QString str)
+{
+	if(QFileInfo::exists(QString("%1/.config/KDHedger/%2.temp.conf").arg(getenv("HOME")).arg(str))==true)
+		QFile::remove(QString("%1/.config/KDHedger/%2.temp.conf").arg(getenv("HOME")).arg(str));
+}
+
+void prefsClass::runDialog(void)
+{
+	this->dialogPrefs.theDialog->exec();
+}
+
+bool prefsClass::doCliArgs(int argc,char **argv,option longoptions[])
+{
+	int			ocnt=0;
+	int			c;
+	std::string	optstr="";
+	int			option_index;
+
+	while(longoptions[ocnt].name!=0)
+		{
+			optstr+=longoptions[ocnt].val;
+			if(longoptions[ocnt].has_arg!=no_argument)
+				{
+					if(longoptions[ocnt].has_arg==required_argument)
+						optstr+=":";
+					if(longoptions[ocnt].has_arg==optional_argument)
+						optstr+="::";
+				}
+			ocnt++;
+		}
+
+	optstr+="?h";
+
+	while(1)
+		{
+			option_index=0;
+			c=getopt_long(argc,argv,optstr.c_str(),longoptions,&option_index);
+			if(c==-1)
+				break;
+			if(c=='?' || c=='h')
+				return(false);
+
+			ocnt=0;
+			while(longoptions[ocnt].name!=0)
+				{
+					if(longoptions[ocnt].val==c)
+						{
+							if(optarg!=NULL)
+								{
+									this->appendStrPref(longoptions[ocnt].name,QString(optarg));
+								}
+							else
+								{
+									if(longoptions[ocnt].has_arg==optional_argument)
+										this->appendStrPref(longoptions[ocnt].name,QString(optarg));
+									else
+										this->appendStrPref(longoptions[ocnt].name,"");
+								}
+						}
+					ocnt++;
+				}			
+		}
+
+	while(optind<argc)
+		{
+			this->extraCliArgs<<argv[optind];
+			optind++;
+		}
+	return(true);
+}

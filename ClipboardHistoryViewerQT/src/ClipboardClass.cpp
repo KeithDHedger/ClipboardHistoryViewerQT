@@ -22,10 +22,31 @@
 
 ClipboardClass::~ClipboardClass()
 {
-	QSettings	prefs("KDHedger",PACKAGE_NAME);
-	prefs.setValue("geometry",mainWindow->saveGeometry());
+	QStringList	sl;
+	QSettings	settings("KDHedger",PACKAGE_NAME);
+
+	settings.setValue("geometry",mainWindow->saveGeometry());
+
+	if(this->save==true)
+		{
+			for(int j=0;j<this->clips->count();j++)
+				{
+					if(this->clips->itemData(j).toString().isEmpty()==false)
+						sl<<this->clips->itemData(j).toString();
+				}
+		}
+	settings.setValue("savestrings",sl);
+
 	delete this->mainWindow;
 	XCloseDisplay(this->display);
+
+
+
+
+
+
+
+
 }
 
 QString ClipboardClass::truncateString(const QString &input)
@@ -155,7 +176,7 @@ ClipboardClass::ClipboardClass()
 
 void ClipboardClass::buildMainGui(void)
 {
- 	QSettings	prefs("KDHedger",PACKAGE_NAME);
+ 	QSettings	settings("KDHedger",PACKAGE_NAME);
 	QWidget		*centre=NULL;
 	QVBoxLayout	*vbox=NULL;
 	QHBoxLayout	*hlayout;
@@ -165,6 +186,12 @@ void ClipboardClass::buildMainGui(void)
 	QPushButton	*quit=NULL;
 	QPushButton	*clearall=NULL;
 	QPushButton	*clear=NULL;
+	QPushButton	*prefs=NULL;
+	prefsClass	newprefs(PACKAGE_NAME);
+
+	this->sticky=newprefs.getSavedPrefValue("prefs/Sticky").toBool();
+	this->ontop=newprefs.getSavedPrefValue("prefs/On Top").toBool();
+	this->save=newprefs.getSavedPrefValue("prefs/Save History").toBool();
 
 	this->mainWindow=new QMainWindow;
 	this->mainWindow->setWindowTitle("Clipboard Viewer QT");
@@ -186,6 +213,19 @@ void ClipboardClass::buildMainGui(void)
 	clearall->setEnabled(false);
 
 	this->clips=new QComboBox(this->mainWindow);
+	this->clips->setMinimumContentsLength(1);
+	if(this->save==true)
+		{
+			QStringList sl=settings.value("savestrings").toStringList();
+			if(sl.size()>0)
+				{
+					clear->setEnabled(true);
+					clearall->setEnabled(true);
+				}
+			for(const QString &str:sl)
+				this->mainClip->setText(str);
+		}
+
 	QObject::connect(this->clips,&QComboBox::activated,[this,clear,clearall](int index)
 		{
 			QImage		image=this->clips->itemData(index).value<QImage>();
@@ -244,24 +284,13 @@ void ClipboardClass::buildMainGui(void)
 			clearall->setEnabled(false);
 		});
 	hlayout->addWidget(clearall);
-	
-	sticky=new QPushButton(QIcon::fromTheme("changes-prevent"),"Sticky",this->mainWindow);
-	sticky->setCheckable(true);
-	sticky->setChecked(true);
-	QObject::connect(sticky,&QPushButton::clicked,[this,sticky](bool checked)
+
+	prefs=new QPushButton(QIcon::fromTheme("preferences-desktop-theme"),"Prefs",this->mainWindow);
+	QObject::connect(prefs,&QPushButton::clicked,[this](bool checked)
 		{
-			if(checked==false)
-				{
-					setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE",NULL,PropModeReplace);
-					sticky->setIcon(QIcon::fromTheme("changes-allow"));
-				}
-			else
-				{
-					setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_STICKY",PropModeReplace);
-					sticky->setIcon(QIcon::fromTheme("changes-prevent"));
-			}
+			this->doPrefs();
 		});
-	hlayout->addWidget(sticky);
+	hlayout->addWidget(prefs);
 
 	about=new QPushButton(QIcon::fromTheme("help-about"),"About",this->mainWindow);
 	QObject::connect(about,&QPushButton::clicked,[this]()
@@ -295,8 +324,12 @@ void ClipboardClass::buildMainGui(void)
 	vbox->addWidget(hbox);
 	this->mainWindow->setCentralWidget(centre);
 
-	this->mainWindow->restoreGeometry(prefs.value("geometry").toByteArray());
+	this->mainWindow->restoreGeometry(settings.value("geometry").toByteArray());
 	this->mainWindow->show();
+	this->save=newprefs.getSavedPrefValue("prefs/Save History").toBool();
+	this->sticky=newprefs.getSavedPrefValue("prefs/Sticky").toBool();
+	this->ontop=newprefs.getSavedPrefValue("prefs/On Top").toBool();
+	this->setWindowStates();
 }
 
 void ClipboardClass::setWindowProps(Display *dsp,Window window,const char* grp,const char *type_name,int what)
@@ -306,4 +339,44 @@ void ClipboardClass::setWindowProps(Display *dsp,Window window,const char* grp,c
 
 	XChangeProperty(dsp,window,window_type,XA_ATOM,32,what,(unsigned char *)&type,1);
     XFlush(dsp);
+}
+
+void ClipboardClass::setWindowStates(void)
+{
+	setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE",NULL,PropModeReplace);
+	if(this->sticky==true)
+		setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_STICKY",PropModeAppend);
+	if(this->ontop==true)
+		setWindowProps(this->display,this->mainWindow->winId(),"_NET_WM_STATE","_NET_WM_STATE_ABOVE",PropModeAppend);
+
+}
+
+void ClipboardClass::doPrefs(void)
+{
+	prefsClass	newprefs;
+	QStringList  prefsdata;;
+	QSize		sze;
+	QStringList	prfs;
+
+	prfs<<"check"<<"prefs/Save History"<<QVariant(this->save).toString()<<"check"<<"prefs/Sticky"<<QVariant(this->sticky).toString()<<"check"<<"prefs/On Top"<<QVariant(this->ontop).toString();
+
+	newprefs.createDialog(PACKAGE_NAME,prfs);		
+	setWindowProps(this->display,newprefs.dialogPrefs.theDialog->winId(),"_NET_WM_STATE","_NET_WM_STATE_ABOVE",PropModeAppend);
+
+	newprefs.runDialog();
+	if(newprefs.dialogPrefs.valid==true)
+		{
+			this->sticky=false;
+			this->save=false;
+			this->ontop=false;
+
+			if(newprefs.dialogPrefs.checkBoxes.value(SAVE)->isChecked()==true)		
+				this->save=true;
+			if(newprefs.dialogPrefs.checkBoxes.value(STICKY)->isChecked()==true)		
+				this->sticky=true;
+			if(newprefs.dialogPrefs.checkBoxes.value(ONTOP)->isChecked()==true)		
+				this->ontop=true;
+
+			this->setWindowStates();
+		}
 }

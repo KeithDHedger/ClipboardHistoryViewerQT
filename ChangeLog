@@ -1,4 +1,6 @@
 0.2.0
+Added prefs, set stick, on top and save history.
+Removed 'Sticky' button now in prefs.
 Set edit window to read only.
 Set clear/clearall enabled/disabled.
 Added 'clear' to clear current item.

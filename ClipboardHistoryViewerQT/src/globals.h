@@ -26,6 +26,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <getopt.h>
 
 #define MAXCLIPMENULEN 50
 #define MAXCLIPS 32
@@ -34,6 +35,6 @@
 
 #include "ClipboardClass.h"
 #include "QT_AboutBox.h"
-
+#include "prefsClass.h"
 
 #endif

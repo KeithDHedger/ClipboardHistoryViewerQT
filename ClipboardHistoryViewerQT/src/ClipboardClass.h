@@ -21,6 +21,11 @@
 #ifndef _CLIPBOARDCLASS_
 #define _CLIPBOARDCLASS_
 
+enum {SAVE=0,STICKY,ONTOP};
+
+#define CONFIRMPASTEBOX 1
+#define CLOSETABONEXIT 2
+
 #include "globals.h"
 
 class ClipboardClass
@@ -37,11 +42,15 @@ class ClipboardClass
 		int				imageCnt=1;
 		int				clipcnt=0;
 		Display			*display=NULL;
-
+		bool				save=false;
+		bool				sticky=true;
+		bool				ontop=false;
 		void				buildMainGui(void);
 		void				setWindowProps(Display *dsp,Window window,const char* grp,const char *type_name,int what);
 		bool				tryForImage(QUrl path);
+		void				doPrefs(void);
 		QString			truncateString(const QString &input);
+		void				setWindowStates(void);
 };
 
 #endif
