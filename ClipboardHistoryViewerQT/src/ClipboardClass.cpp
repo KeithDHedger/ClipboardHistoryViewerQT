@@ -39,14 +39,6 @@ ClipboardClass::~ClipboardClass()
 
 	delete this->mainWindow;
 	XCloseDisplay(this->display);
-
-
-
-
-
-
-
-
 }
 
 QString ClipboardClass::truncateString(const QString &input)

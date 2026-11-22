@@ -32,10 +32,5 @@ int main(int argv, char **args)
 	retval=app.exec();
 	prefsClass::cleanTemp(PACKAGE_NAME);
 
-//	for (int j=0;j<cc.clips->count();j++)
-//		qDebug() << cc.clips->itemData(j).toString();
-
-
-//this->clips->itemData(index).toString()
 	return(retval);
 }

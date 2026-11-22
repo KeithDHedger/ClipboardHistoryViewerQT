@@ -1,3 +1,22 @@
+/*
+ *
+ * ©K. D. Hedger. Sun 22 Nov 19:00:12 GMT 2026 keithdhedger@gmail.com
+
+ * This file (prefsClass.cpp) is part of ClipboardHistoryViewerQT.
+
+ * ClipboardHistoryViewerQT is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * ClipboardHistoryViewerQT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with ClipboardHistoryViewerQT.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "globals.h"
 
@@ -37,9 +56,7 @@ prefsClass::prefsClass(QString pname)
 	else
 		this->prefsFileName=pname;
 
-//	this->tempPrefsFileName=QString("%1/.config/KDHedger/%2.temp.conf").arg(getenv("HOME")).arg(this->prefsFileName);
 	this->tempPrefsFileName=QString("%1.temp").arg(this->prefsFileName);
-//this->persistantName=this->prefsFileName;
 }
 
 QString prefsClass::bestFontColour(QString colour)
