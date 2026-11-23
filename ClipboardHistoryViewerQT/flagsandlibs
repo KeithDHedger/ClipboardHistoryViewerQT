@@ -2,10 +2,7 @@
 AM_CPPFLAGS =	-I$(top_srcdir) \
 				$(QTCORE_CFLAGS) \
 				$(QTWIDGETS_CFLAGS) \
-				-DPREFIX=\""${prefix}\"" \
 				-DDATADIR=\""${pkgdatadir}"\" \
-				-DSYSCONFDIR=\""${sysconfdir}/${PACKAGE}"\" \
-				-DLIBDIR=\""${libdir}/${PACKAGE}"\" \
 				-fPIC
 
 LIBS =	$(X11_LIBS) \

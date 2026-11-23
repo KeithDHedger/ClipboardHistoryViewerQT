@@ -1,22 +1,3 @@
-/*
- *
- * ©K. D. Hedger. Fri 11 Sep 17:30:22 BST 2026 keithdhedger@gmail.com
-
- * This file (QT_AboutBox.h) is part of ClipboardViewerQT.
-
- * ClipboardViewerQT is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
-
- * ClipboardViewerQT is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with ClipboardViewerQT.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include "globals.h"
 #include "credits.h"
@@ -36,9 +17,10 @@ class AboutBoxClass : public QObject
 		void			runAbout(void);
 		void			setHomepage(QString hpaddr,QString hpstr);
 		void			setBodyText(QString bodystr);
-		void			showAboutQtButton(bool show=false);
-		void			showLicenceButton(bool show=false);
-		void			showCreditsButton(bool show=false);
+		void			showAboutQtButton(void);
+		void			showLicenceButton(void);
+		void			showCreditsButton(void);
+		void			showHelpButton(QString htmlpath);
 		static void	showHelp(QString htmlpath);
 
 	private:
@@ -51,6 +33,9 @@ class AboutBoxClass : public QObject
 		QPushButton	*aboutQtButton;
 		QPushButton	*licenseButton;
 		QPushButton	*creditsButton;
+		QPushButton	*helpButton;
+		QString		helpHtml;
+
 
 		void			setAppName(void);
 		void			showLicence(void);
@@ -58,6 +43,8 @@ class AboutBoxClass : public QObject
 		void			killLicenceBox(void);
 		void			killAboutBox(void);
 		void			killCreditsBox(void);
+	//	void			killHelpBox(void);
+
 };
 
 #endif

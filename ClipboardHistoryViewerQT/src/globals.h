@@ -29,7 +29,6 @@
 #include <getopt.h>
 
 #define MAXCLIPMENULEN 50
-#define MAXCLIPS 32
 
 #include "config.h"
 

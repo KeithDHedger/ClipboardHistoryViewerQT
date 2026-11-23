@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipboard History Viewer QT – Help</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #0d6efd;
+    --border: #dee2e6;
+    --code-bg: #f1f3f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 0 1rem 3rem;
+  }
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 1.75rem 0 1.25rem;
+    margin: 0 -1rem 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin: 0;
+  }
+  h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--border);
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin: 1.4rem 0 0.5rem;
+  }
+  p { margin: 0.6rem 0; }
+  ul, ol { margin: 0.5rem 0 1rem 1.4rem; padding: 0; }
+  li { margin: 0.3rem 0; }
+  code, kbd {
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.12em 0.35em;
+    border-radius: 3px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .btn-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    align-items: baseline;
+  }
+  .btn-list strong { white-space: nowrap; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.25rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+  }
+  th { background: var(--code-bg); font-weight: 600; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  a { color: var(--accent); }
+  .note {
+    background: #e7f1ff;
+    border-left: 4px solid var(--accent);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Clipboard History Viewer QT</h1>
+  <p class="subtitle">Text and image clipboard history viewer for Linux / X11</p>
+</header>
+
+<img src="main2.png" alt="main.png" title="main2.png"><br>
+<img src="main.png" alt="main.png" title="main.png">
+
+<section id="overview">
+  <h2>Overview</h2>
+  <p>
+    Clipboard History Viewer QT is a lightweight Qt application that monitors the system clipboard
+    and keeps a history of recent text and image entries. You can quickly switch between previous
+    clipboard contents, preview them, and restore any entry to the clipboard with a single click.
+  </p>
+  <p>
+    The application is designed for X11 environments and supports window manager hints for
+    sticky windows and always-on-top behaviour.
+  </p>
+</section>
+
+<section id="main-window">
+  <h2>Main Window</h2>
+  <p>The main window consists of three primary areas:</p>
+  <ol>
+    <li><strong>Preview area</strong> – a read-only text/image view that shows the currently selected clipboard entry.</li>
+    <li><strong>History combo box</strong> – a drop-down list of recent clipboard items (text or images).</li>
+    <li><strong>Button bar</strong> – controls for managing the history and opening dialogs.</li>
+  </ol>
+
+  <h3>History Combo Box</h3>
+  <ul>
+    <li>Each new unique clipboard item is added to the top of the list.</li>
+    <li>Long text entries are truncated in the list for readability (middle ellipsis).</li>
+    <li>Image entries are shown with a generated name such as <code>Image-1</code>, <code>Image-2</code>, etc., or the original file name when the clipboard contains a file URL.</li>
+    <li>The maximum number of stored entries is limited (default 32). Older entries are automatically removed when the limit is reached.</li>
+    <li>Selecting an entry from the list restores it to both the preview area and the system clipboard.</li>
+  </ul>
+
+  <h3>Supported Clipboard Content</h3>
+  <ul>
+    <li><strong>Plain text</strong> – any text placed on the clipboard.</li>
+    <li><strong>Images</strong> – images copied directly or via file URLs that can be loaded as images.</li>
+    <li><strong>File URLs</strong> – when a local file path or URL is on the clipboard, the application attempts to load it as an image; if that fails it is treated as text.</li>
+  </ul>
+</section>
+
+<section id="buttons">
+  <h2>Buttons</h2>
+  <div class="card">
+    <div class="btn-list">
+      <strong>Clear</strong>
+      <span>Removes the currently selected entry from the history list and updates the preview / clipboard to the next remaining item.</span>
+
+      <strong>Clear All</strong>
+      <span>Removes every entry from the history and clears the preview area.</span>
+
+      <strong>Prefs</strong>
+      <span>Opens the Preferences dialog (see below).</span>
+
+      <strong>About</strong>
+      <span>Shows the About dialog with version information, licence, credits and a link to the project page.</span>
+
+      <strong>Quit</strong>
+      <span>Exits the application. If “Save History” is enabled, the current text history is written to the settings file.</span>
+    </div>
+  </div>
+</section>
+
+<section id="preferences">
+  <h2>Preferences</h2>
+  <p>The Preferences dialog provides three options:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Option</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Save History</strong></td>
+        <td>
+          When enabled, the list of text clipboard entries is saved on exit and restored the next time
+          the application starts. Image data is not persisted.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Sticky</strong></td>
+        <td>
+          Makes the main window “sticky” (visible on all virtual desktops / workspaces) using the
+          <code>_NET_WM_STATE_STICKY</code> window manager hint.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>On Top</strong></td>
+        <td>
+          Keeps the main window above other windows using the
+          <code>_NET_WM_STATE_ABOVE</code> window manager hint.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Max Clips</strong></td>
+        <td>
+          Sets the maxuimum number of clips.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    Changes to Sticky, On Top, and Max Clips take effect immediately after you accept the Preferences dialog.
+    Geometry (window size and position) is always remembered between sessions.
+  </div>
+</section>
+
+<section id="behaviour">
+  <h2>Behaviour Notes</h2>
+  <ul>
+    <li>The application listens to the system clipboard’s <code>dataChanged</code> signal and reacts automatically when new content appears.</li>
+    <li>Duplicate text or identical image data is not added again if it is already present in the history.</li>
+    <li>When restoring an entry, signals are temporarily blocked so that the restore action itself does not create a new history item.</li>
+    <li>Window state (sticky / on-top) is applied via X11 properties and therefore requires a compatible window manager.</li>
+  </ul>
+</section>
+
+<section id="licence">
+  <h2>Licence</h2>
+  <p>
+    Clipboard History Viewer QT is free software released under the
+    <strong>GNU General Public License version 3</strong> (or any later version).
+  </p>
+  <p>
+    Copyright © 2013–2026 K. D. Hedger
+  </p>
+</section>
+
+<footer>
+  <p>
+    Help file generated from the application source code.<br>
+    Project page:
+    <a href="https://github.com/KeithDHedger/ClipboardHistoryViewerQT">https://github.com/KeithDHedger/ClipboardHistoryViewerQT</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

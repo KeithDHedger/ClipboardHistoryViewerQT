@@ -1,27 +1,9 @@
-/*
- *
- * ©K. D. Hedger. Fri 11 Sep 17:30:13 BST 2026 keithdhedger@gmail.com
-
- * This file (QT_AboutBox.cpp) is part of ClipboardViewerQT.
-
- * ClipboardViewerQT is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
-
- * ClipboardViewerQT is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with ClipboardViewerQT.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include "QT_AboutBox.h"
 
 void AboutBoxClass::runAbout(void)
 {
+
 	this->setAppName();
 	this->aboutDialog->exec();
 }
@@ -210,6 +192,7 @@ AboutBoxClass::AboutBoxClass(QWidget *window,QString pixpath)
 //credits
 	this->creditsButton=new QPushButton("&Credits");
 	this->creditsButton->setIcon(QIcon::fromTheme("text-x-credits"));
+	this->creditsButton->setVisible(false);
 	QObject::connect(this->creditsButton,&QPushButton::clicked,[this]()
 		{
 			this->showCredits();
@@ -219,6 +202,7 @@ AboutBoxClass::AboutBoxClass(QWidget *window,QString pixpath)
 //licence
 	this->licenseButton=new QPushButton("&Licence");
 	this->licenseButton->setIcon(QIcon::fromTheme("text-x-license"));
+	this->licenseButton->setVisible(false);
 	QObject::connect(this->licenseButton,&QPushButton::clicked,[this]()
 		{
 			this->showLicence();
@@ -228,6 +212,7 @@ AboutBoxClass::AboutBoxClass(QWidget *window,QString pixpath)
 //about qt
 	this->aboutQtButton=new QPushButton("&About Qt");
 	this->aboutQtButton->setIcon(QIcon::fromTheme("help-about"));
+	this->aboutQtButton->setVisible(false);
 	QObject::connect(this->aboutQtButton,&QPushButton::clicked,[this]()
 		{
 			qApp->aboutQt();
@@ -235,13 +220,24 @@ AboutBoxClass::AboutBoxClass(QWidget *window,QString pixpath)
 		});
 	hlayout->addWidget(this->aboutQtButton);
 
+//help
+	this->helpButton=new QPushButton("&Help");
+	this->helpButton->setIcon(QIcon::fromTheme("help-contents"));
+	this->helpButton->setVisible(false);
+	QObject::connect(this->helpButton,&QPushButton::clicked,[this]()
+		{
+			this->showHelp(this->helpHtml);
+		});
+	hlayout->addWidget(this->helpButton);
+
 //close
 	button=new QPushButton("&Close");
 	button->setIcon(QIcon::fromTheme("window-close"));
 	QObject::connect(button,&QPushButton::clicked,[this,window]()
 		{
 			this->killAboutBox();
-			window->activateWindow();
+			if(window!=nullptr)
+				window->activateWindow();
 		});
 	hlayout->addWidget(button);
 
@@ -249,27 +245,34 @@ AboutBoxClass::AboutBoxClass(QWidget *window,QString pixpath)
 	this->aboutDialog->setLayout(vlayout);
 }
 
-void AboutBoxClass::showAboutQtButton(bool show)
+void AboutBoxClass::showHelpButton(QString htmlpath)
 {
-	this->aboutQtButton->setVisible(show);
+	this->helpButton->setVisible(true);
+	this->helpHtml=htmlpath;
 }
 
-void AboutBoxClass::showLicenceButton(bool show)
+void AboutBoxClass::showAboutQtButton(void)
 {
-	this->licenseButton->setVisible(show);
+	this->aboutQtButton->setVisible(true);
 }
 
-void AboutBoxClass::showCreditsButton(bool show)
+void AboutBoxClass::showLicenceButton(void)
 {
-	this->creditsButton->setVisible(show);
+	this->licenseButton->setVisible(true);
+}
+
+void AboutBoxClass::showCreditsButton(void)
+{
+	this->creditsButton->setVisible(true);
 }
 
 void AboutBoxClass::showHelp(QString htmlpath)
 {
-	QDialog			dialog;
+	QDialog			dialog(qApp->activeWindow());
 	QVBoxLayout		*layout;
 	QTextBrowser		*textBrowser=new QTextBrowser(&dialog);
 
+	textBrowser->setOpenExternalLinks(true);
 	textBrowser->setSource(QUrl(htmlpath));
 	layout=new QVBoxLayout(&dialog);
     layout->addWidget(textBrowser);

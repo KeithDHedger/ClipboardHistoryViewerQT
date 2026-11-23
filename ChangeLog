@@ -1,4 +1,8 @@
 0.2.0
+Max number of clips now set in prefs instead of being hard coded ( min=10, max=500 ).
+Added default icons.
+Added help.
+Added about.
 Added prefs, set stick, on top and save history.
 Removed 'Sticky' button now in prefs.
 Set edit window to read only.

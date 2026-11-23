@@ -26,6 +26,10 @@ int main(int argv, char **args)
 	ClipboardClass	cc;
 	int				retval;
 
+	QIcon::setThemeSearchPaths(QStringList()<<QString("%1/icons").arg(DATADIR)<<QString("/usr/share/icons")<<QString("%1/.icons").arg(getenv("HOME")));
+	QIcon::setFallbackSearchPaths(QStringList()<<QString("%1/icons").arg(DATADIR)<<QString("/usr/share/icons")<<QString("%1/.icons").arg(getenv("HOME")));
+	QIcon::setFallbackThemeName("clipicons");
+
 	app.setApplicationName(PACKAGE_NAME);
 	app.setApplicationVersion(PACKAGE_VERSION);
 

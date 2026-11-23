@@ -101,12 +101,19 @@ bool ClipboardClass::tryForImage(QUrl path)
 
 ClipboardClass::ClipboardClass()
 {
- 	this->display=XOpenDisplay(NULL);
+	prefsClass	newprefs(PACKAGE_NAME);
+
+	this->display=XOpenDisplay(NULL);
 	if(this->display==NULL)
 		{
 			fprintf(stderr,"Can't open display exiting ...");
 			exit(1);
 		}
+
+	this->sticky=newprefs.getSavedPrefValue("prefs/Sticky").toBool();
+	this->ontop=newprefs.getSavedPrefValue("prefs/On Top").toBool();
+	this->save=newprefs.getSavedPrefValue("prefs/Save History").toBool();
+	this->maxClips=newprefs.getSavedPrefValue("prefs/Max Clips").toInt();
 
 	this->mainClip=qApp->clipboard();
 	QObject::connect(this->mainClip,&QClipboard::dataChanged,[this]()
@@ -128,12 +135,17 @@ ClipboardClass::ClipboardClass()
 										}
 								}
 						}
+					while(this->clips->count()>this->maxClips)
+						this->clips->removeItem(0);
 					return;			
 				}
 			else if(this->mainClip->mimeData()->hasText())
 				{
 					if(this->tryForImage(QUrl(this->mainClip->text()))==true)
 						{
+
+							while(this->clips->count()>this->maxClips)
+								this->clips->removeItem(0);
 							return;
 						}
 					else
@@ -160,7 +172,7 @@ ClipboardClass::ClipboardClass()
 					this->clips->setCurrentIndex(this->clips->count()-1);
 				}
 
-			if(this->clips->count()>MAXCLIPS)
+			while(this->clips->count()>this->maxClips)
 				this->clips->removeItem(0);
 		});			
 	this->buildMainGui();
@@ -181,9 +193,10 @@ void ClipboardClass::buildMainGui(void)
 	QPushButton	*prefs=NULL;
 	prefsClass	newprefs(PACKAGE_NAME);
 
-	this->sticky=newprefs.getSavedPrefValue("prefs/Sticky").toBool();
-	this->ontop=newprefs.getSavedPrefValue("prefs/On Top").toBool();
-	this->save=newprefs.getSavedPrefValue("prefs/Save History").toBool();
+//	this->sticky=newprefs.getSavedPrefValue("prefs/Sticky").toBool();
+//	this->ontop=newprefs.getSavedPrefValue("prefs/On Top").toBool();
+//	this->save=newprefs.getSavedPrefValue("prefs/Save History").toBool();
+//	this->maxClips=newprefs.getSavedPrefValue("prefs/prefs/Max Clips").toInt();
 
 	this->mainWindow=new QMainWindow;
 	this->mainWindow->setWindowTitle("Clipboard Viewer QT");
@@ -216,6 +229,9 @@ void ClipboardClass::buildMainGui(void)
 				}
 			for(const QString &str:sl)
 				this->mainClip->setText(str);
+
+			while(this->clips->count()>this->maxClips)
+				this->clips->removeItem(0);
 		}
 
 	QObject::connect(this->clips,&QComboBox::activated,[this,clear,clearall](int index)
@@ -288,7 +304,7 @@ void ClipboardClass::buildMainGui(void)
 	QObject::connect(about,&QPushButton::clicked,[this]()
 		{
 			QString			pixpath=QString("%1/pixmaps/ClipboardHistoryViewerQT.png").arg(DATADIR);
-			AboutBoxClass	about(qApp->activeWindow(),pixpath);
+			AboutBoxClass	about(nullptr,pixpath);
 			QFile			file(QString("%1/docs/gpl-3.0.txt").arg(DATADIR));
 			if(file.open(QIODevice::ReadOnly | QIODevice::Text))
 				{
@@ -299,9 +315,10 @@ void ClipboardClass::buildMainGui(void)
 			about.credits=credits;
 			about.setHomepage("https://github.com/KeithDHedger/ClipboardHistoryViewerQT","Clipboard History Viewer QT");
 			about.setBodyText("Text and image clipboard viewer");
-			about.showAboutQtButton(true);
-			about.showLicenceButton(true);
-			about.showCreditsButton(true);
+			about.showAboutQtButton();
+			about.showLicenceButton();
+			about.showCreditsButton();
+			about.showHelpButton(QString("%1/docs/help/help.html").arg(DATADIR));
 			about.runAbout();
 		});
 	hlayout->addWidget(about);
@@ -350,7 +367,7 @@ void ClipboardClass::doPrefs(void)
 	QSize		sze;
 	QStringList	prfs;
 
-	prfs<<"check"<<"prefs/Save History"<<QVariant(this->save).toString()<<"check"<<"prefs/Sticky"<<QVariant(this->sticky).toString()<<"check"<<"prefs/On Top"<<QVariant(this->ontop).toString();
+	prfs<<"check"<<"prefs/Save History"<<QVariant(this->save).toString()<<"check"<<"prefs/Sticky"<<QVariant(this->sticky).toString()<<"check"<<"prefs/On Top"<<QVariant(this->ontop).toString()<<"spinner"<<"prefs/Max Clips"<<"10"<<"500"<<QVariant(this->maxClips).toString()<<"1";
 
 	newprefs.createDialog(PACKAGE_NAME,prfs);		
 	setWindowProps(this->display,newprefs.dialogPrefs.theDialog->winId(),"_NET_WM_STATE","_NET_WM_STATE_ABOVE",PropModeAppend);
@@ -368,6 +385,10 @@ void ClipboardClass::doPrefs(void)
 				this->sticky=true;
 			if(newprefs.dialogPrefs.checkBoxes.value(ONTOP)->isChecked()==true)		
 				this->ontop=true;
+			this->maxClips=qRound(newprefs.dialogPrefs.spinBoxes.value(MAXCLIPS)->value());
+
+			while(this->clips->count()>this->maxClips)
+				this->clips->removeItem(0);
 
 			this->setWindowStates();
 		}

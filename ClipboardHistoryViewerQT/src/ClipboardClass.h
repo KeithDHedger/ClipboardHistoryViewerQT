@@ -22,6 +22,7 @@
 #define _CLIPBOARDCLASS_
 
 enum {SAVE=0,STICKY,ONTOP};
+enum {MAXCLIPS=0};
 
 #define CONFIRMPASTEBOX 1
 #define CLOSETABONEXIT 2
@@ -40,7 +41,7 @@ class ClipboardClass
 		QClipboard		*mainClip=NULL;
 		QComboBox		*clips=NULL;
 		int				imageCnt=1;
-		int				clipcnt=0;
+		int				maxClips=32;
 		Display			*display=NULL;
 		bool				save=false;
 		bool				sticky=true;
