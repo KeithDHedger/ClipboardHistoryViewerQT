@@ -92,8 +92,6 @@ void prefsClass::writePrefs(bool usereal)
 		prefs=new QSettings("KDHedger",this->prefsFileName);
 	else
 		prefs=new QSettings("KDHedger",this->tempPrefsFileName);
-		
-	//QSettings	prefs("KDHedger",this->prefsFileName);
 
 	for(int j=0;j<this->dialogPrefs.comboBoxCnt;j++)
 		prefs->setValue(this->dialogPrefs.comboBoxesPrefsName[j],this->dialogPrefs.comboBoxes[j]->currentText());
@@ -247,6 +245,7 @@ void prefsClass::createDialog(QString title,QStringList items,QSize sze)
 	this->dialogPrefs.theDialog->setWindowTitle(title);
 
 	mainvlayout=new QVBoxLayout(this->dialogPrefs.theDialog);
+
 	this->bb=new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel|QDialogButtonBox::Apply);
 
 	if(defaults->contains("prefsgeometry"))
@@ -272,7 +271,7 @@ void prefsClass::createDialog(QString title,QStringList items,QSize sze)
 	}
 	else
 		{
-			docvlayout=new QVBoxLayout(this->dialogPrefs.theDialog);
+			docvlayout=new QVBoxLayout;
 			this->dialogPrefs.theDialog->setLayout(mainvlayout);
 			mainvlayout->addLayout(docvlayout);
 		}

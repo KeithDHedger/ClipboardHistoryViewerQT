@@ -369,7 +369,7 @@ void ClipboardClass::doPrefs(void)
 
 	prfs<<"check"<<"prefs/Save History"<<QVariant(this->save).toString()<<"check"<<"prefs/Sticky"<<QVariant(this->sticky).toString()<<"check"<<"prefs/On Top"<<QVariant(this->ontop).toString()<<"spinner"<<"prefs/Max Clips"<<"10"<<"500"<<QVariant(this->maxClips).toString()<<"1";
 
-	newprefs.createDialog(PACKAGE_NAME,prfs);		
+	newprefs.createDialog(PACKAGE_NAME,prfs);
 	setWindowProps(this->display,newprefs.dialogPrefs.theDialog->winId(),"_NET_WM_STATE","_NET_WM_STATE_ABOVE",PropModeAppend);
 
 	newprefs.runDialog();
